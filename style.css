@@ -107,6 +107,9 @@
     align-items: center;
     justify-content: center;
  }
+ .clue-category {
+   margin-bottom: 10px; /* Adjust the value as needed */
+}
  .card-modal.visible {
     opacity: 1;
     pointer-events:initial;

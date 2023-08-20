@@ -2,7 +2,7 @@ class TriviaGameShow {
     constructor(element, options={}) {
  
        //Which categories we should use (or use default is nothing provided)
-       this.useCategoryIds = options.useCategoryIds || [ 1892, 4483, 88, 218];
+       this.useCategoryIds = options.useCategoryIds || [ 1892, 4483, 88, 218, 68, 18];
        /*
           Default Categories pulled from https://jservice.io/search:
           ---
@@ -18,184 +18,208 @@ class TriviaGameShow {
  
        //State
        this.currentClue = null;
-       this.score = 0;
+       this.score1 = 0;
+       this.score2 = 0;
+       this.score3 = 0;
  
        //Elements
        this.boardElement = element.querySelector(".board");
-       this.scoreCountElement = element.querySelector(".score-count"); //need to change to allow multiple scores
+       this.scoreCountElement1 = element.querySelector(".score-count-1"); //need to change to allow multiple scores
+       this.scoreCountElement2 = element.querySelector(".score-count-2");
+       this.scoreCountElement3 = element.querySelector(".score-count-3");
        this.formElement = element.querySelector("form");
        this.inputElement = element.querySelector("input[name=user-answer]");
        this.modalElement = element.querySelector(".card-modal"); //the popup for the current question
        this.clueTextElement = element.querySelector(".clue-text");
+       this.clueCategoryElement = element.querySelector(".clue-category"); // i added this lol let's see if it does anything
        this.resultElement = element.querySelector(".result");
        this.resultTextElement = element.querySelector(".result_correct-answer-text");
        this.successTextElement = element.querySelector(".result_success");
        this.failTextElement = element.querySelector(".result_fail");
     }
  
-    initGame() {
-       //Bind event handlers
-       this.boardElement.addEventListener("click", event => {
-          if (event.target.dataset.clueId) {
-             this.handleClueClick(event);
-          }
+      initGame() {
+         //Bind event handlers
+         this.boardElement.addEventListener("click", event => {
+            if (event.target.dataset.clueId) {
+               this.handleClueClick(event);
+            }
+         });
+         this.formElement.addEventListener("submit", event => {
+            this.handleFormSubmit(event);
+         });
+   
+         //Render initial state of score
+         this.updateScore1(0);
+         this.updateScore2(0);
+         this.updateScore3(0);
+   
+         //Kick off the category fetch
+         //
+         // INSTEAD: GET A NEW CATEGORY FETCH FOR DOUBLE JEOPARDY IN THIS CASE,
+         // MULTIPLY ALL OF THE CLUES' VALUES BY 2 TO REFLECT DOUBLE JEOPARDY
+         //
+         this.fetchCategories();
+   
+         //FINALLY, GET FINAL JEOPARDY
+      }
+ 
+ 
+      fetchCategories() {
+         //Fetch all of the data from the API
+         const categories = this.useCategoryIds.map(category_id => {
+            return new Promise((resolve, reject) => {
+               fetch(`https://jservice.io/api/category?id=${category_id}`)
+                  .then(response => response.json()).then(data => {
+                     resolve(data);
+                  });
+            });
+         });
+   
+         //Sift through the data when all categories come back
+         Promise.all(categories).then(results => {
+ 
+            //Build up our list of categories
+            results.forEach((result, categoryIndex) => {
+   
+               //Start with a blank category
+               var category = {
+                  title: result.title,
+                  clues: []
+               }
+   
+               //Add every clue within a category to our database of clues
+               //GETS FIVE RANDOM CLUES FROM THIS CATEGORY
+               var clues = shuffle(result.clues).splice(0,5).forEach((clue, index) => {
+                  console.log(clue)
+   
+                  //Create unique ID for this clue
+                  var clueId = categoryIndex + "-" + index;
+                  category.clues.push(clueId);
+   
+                  //Add clue to DB
+                  this.clues[clueId] = {
+                     question: clue.question,
+                     answer: clue.answer,
+                     value: (index + 1) * 100,
+                     currentCategory: category.title
+                  };
+               })
+   
+               //Add this category to our DB of categories
+               this.categories.push(category);
+            });
+   
+            //Render each category to the DOM
+            this.categories.forEach((c) => {
+               this.renderCategory(c);
+            });
        });
-       this.formElement.addEventListener("submit", event => {
-          this.handleFormSubmit(event);
-       });
- 
-       //Render initial state of score
-       this.updateScore(0);
- 
-       //Kick off the category fetch
-       //
-       // INSTEAD: GET A NEW CATEGORY FETCH FOR DOUBLE JEOPARDY IN THIS CASE,
-       // MULTIPLY ALL OF THE CLUES' VALUES BY 2 TO REFLECT DOUBLE JEOPARDY
-       //
-       this.fetchCategories();
- 
-       //FINALLY, GET FINAL JEOPARDY
     }
  
+      renderCategory(category) {
+         let column = document.createElement("div");
+         column.classList.add("column");
+         column.innerHTML = (
+            `<header>${category.title}</header>
+            <ul>
+            </ul>`
+         ).trim();
+   
+         var ul = column.querySelector("ul");
+         category.clues.forEach(clueId => {
+            var clue = this.clues[clueId];
+            ul.innerHTML += `<li><button data-clue-id=${clueId}>${clue.value}</button></li>`
+         })
+   
+         //Add to DOM
+         this.boardElement.appendChild(column);
+      }
  
-    fetchCategories() {
-       //Fetch all of the data from the API
-       const categories = this.useCategoryIds.map(category_id => {
-          return new Promise((resolve, reject) => {
-             fetch(`https://jservice.io/api/category?id=${category_id}`)
-                .then(response => response.json()).then(data => {
-                   resolve(data);
-                });
-          });
-       });
+      updateScore1(change) {
+         this.score1 += change;
+         this.scoreCountElement1.textContent = this.score1;
+      }
+
+      updateScore2(change) {
+         this.score2 += change;
+         this.scoreCountElement2.textContent = this.score2;
+      }
+
+      updateScore3(change) {
+         this.score3 += change;
+         this.scoreCountElement3.textContent = this.score3;
+      }
  
-       //Sift through the data when all categories come back
-       Promise.all(categories).then(results => {
+      handleClueClick(event) {
+         var clue = this.clues[event.target.dataset.clueId];
+         //WHY ISN'T THIS DOING ANYTHING
+         console.log(clue)
+   
+         //Mark this button as used
+         event.target.classList.add("used");
+   
+         //Clear out the input field
+         this.inputElement.value = "";
+   
+         //Update current clue
+         this.currentClue = clue;
+   
+         //Update the text
+         this.clueTextElement.textContent = this.currentClue.question;
+         this.resultTextElement.textContent = this.currentClue.answer;
+         this.clueCategoryElement.textContent = this.currentClue.currentCategory;
+   
+         //Hide the result
+         this.modalElement.classList.remove("showing-result");
+   
+         //Show the modal
+         this.modalElement.classList.add("visible");
+         this.inputElement.focus();
+      }
  
-          //Build up our list of categories
-          results.forEach((result, categoryIndex) => {
+      //Handle an answer from user
+      handleFormSubmit(event) {
+         event.preventDefault();
+   
+         var isCorrect = this.cleanseAnswer(this.inputElement.value) === this.cleanseAnswer(this.currentClue.answer);
+         if (isCorrect) {
+            this.updateScore(this.currentClue.value);
+         } else {
+            this.updateScore(-this.currentClue.value);
+         }
+   
+         //Show answer
+         this.revealAnswer(isCorrect);
+      }
  
-             //Start with a blank category
-             var category = {
-                title: result.title,
-                clues: []
-             }
- 
-             //Add every clue within a category to our database of clues
-             var clues = shuffle(result.clues).splice(0,5).forEach((clue, index) => {
-                console.log(clue)
- 
-                //Create unique ID for this clue
-                var clueId = categoryIndex + "-" + index;
-                category.clues.push(clueId);
- 
-                //Add clue to DB
-                this.clues[clueId] = {
-                   question: clue.question,
-                   answer: clue.answer,
-                   value: (index + 1) * 100
-                };
-             })
- 
-             //Add this category to our DB of categories
-             this.categories.push(category);
-          });
- 
-          //Render each category to the DOM
-          this.categories.forEach((c) => {
-             this.renderCategory(c);
-          });
-       });
-    }
- 
-    renderCategory(category) {
-       let column = document.createElement("div");
-       column.classList.add("column");
-       column.innerHTML = (
-          `<header>${category.title}</header>
-          <ul>
-          </ul>`
-       ).trim();
- 
-       var ul = column.querySelector("ul");
-       category.clues.forEach(clueId => {
-          var clue = this.clues[clueId];
-          ul.innerHTML += `<li><button data-clue-id=${clueId}>${clue.value}</button></li>`
-       })
- 
-       //Add to DOM
-       this.boardElement.appendChild(column);
-    }
- 
-    updateScore(change) {
-       this.score += change;
-       this.scoreCountElement.textContent = this.score;
-    }
- 
-    handleClueClick(event) {
-       var clue = this.clues[event.target.dataset.clueId];
- 
-       //Mark this button as used
-       event.target.classList.add("used");
- 
-       //Clear out the input field
-       this.inputElement.value = "";
- 
-       //Update current clue
-       this.currentClue = clue;
- 
-       //Update the text
-       this.clueTextElement.textContent = this.currentClue.question;
-       this.resultTextElement.textContent = this.currentClue.answer;
- 
-       //Hide the result
-       this.modalElement.classList.remove("showing-result");
- 
-       //Show the modal
-       this.modalElement.classList.add("visible");
-       this.inputElement.focus();
-    }
- 
-    //Handle an answer from user
-    handleFormSubmit(event) {
-       event.preventDefault();
- 
-       var isCorrect = this.cleanseAnswer(this.inputElement.value) === this.cleanseAnswer(this.currentClue.answer);
-       if (isCorrect) {
-          this.updateScore(this.currentClue.value);
-       }
- 
-       //Show answer
-       this.revealAnswer(isCorrect);
-    }
- 
-    //Standardize an answer string so we can compare and accept variations
-    cleanseAnswer(input="") {
-       var friendlyAnswer = input.toLowerCase();
-       friendlyAnswer = friendlyAnswer.replace("<i>", "");
-       friendlyAnswer = friendlyAnswer.replace("</i>", "");
-       friendlyAnswer = friendlyAnswer.replace(/ /g, "");
-       friendlyAnswer = friendlyAnswer.replace(/"/g, "");
-       friendlyAnswer = friendlyAnswer.replace(/^a /, "");
-       friendlyAnswer = friendlyAnswer.replace(/^an /, "");
-       return friendlyAnswer.trim();
-    }
+      //Standardize an answer string so we can compare and accept variations
+      cleanseAnswer(input="") {
+         var friendlyAnswer = input.toLowerCase();
+         friendlyAnswer = friendlyAnswer.replace("<i>", "");
+         friendlyAnswer = friendlyAnswer.replace("</i>", "");
+         friendlyAnswer = friendlyAnswer.replace(/ /g, "");
+         friendlyAnswer = friendlyAnswer.replace(/"/g, "");
+         friendlyAnswer = friendlyAnswer.replace(/^a /, "");
+         friendlyAnswer = friendlyAnswer.replace(/^an /, "");
+         return friendlyAnswer.trim();
+      }
  
  
-    revealAnswer(isCorrect) {
- 
-       //Show the individual success/fail case
-       this.successTextElement.style.display = isCorrect ? "block" : "none";
-       this.failTextElement.style.display = !isCorrect ? "block" : "none";
- 
-       //Show the whole result container
-       this.modalElement.classList.add("showing-result");
- 
-       //Disappear after a short bit
-       setTimeout(() => {
-          this.modalElement.classList.remove("visible");
-       }, 3000);
-    }
+      revealAnswer(isCorrect) {
+   
+         //Show the individual success/fail case
+         this.successTextElement.style.display = isCorrect ? "block" : "none";
+         this.failTextElement.style.display = !isCorrect ? "block" : "none";
+   
+         //Show the whole result container
+         this.modalElement.classList.add("showing-result");
+   
+         //Disappear after a short bit
+         setTimeout(() => {
+            this.modalElement.classList.remove("visible");
+         }, 3000);
+      }
  
  }
  
