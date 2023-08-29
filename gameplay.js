@@ -79,7 +79,6 @@ class TriviaGameShow {
          // MULTIPLY ALL OF THE CLUES' VALUES BY 2 TO REFLECT DOUBLE JEOPARDY
          //
          this.fetchCategories();
-         // this.fetchRandomCategories1();
    
          //FINALLY, GET FINAL JEOPARDY
       }
@@ -211,9 +210,9 @@ class TriviaGameShow {
    
          var isCorrect = this.cleanseAnswer(this.inputElement.value) === this.cleanseAnswer(this.currentClue.answer);
          if (isCorrect) {
-            this.updateScore(this.currentClue.value);
+            this.updateScore1(this.currentClue.value);
          } else {
-            this.updateScore(-this.currentClue.value);
+            this.updateScore1(-this.currentClue.value);
          }
    
          //Show answer
