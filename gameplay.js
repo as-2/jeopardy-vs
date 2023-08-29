@@ -2,7 +2,7 @@ class TriviaGameShow {
     constructor(element, options={}) {
  
        //Which categories we should use (or use default is nothing provided)
-       this.useCategoryIds = options.useCategoryIds || [ 1892, 4483, 88, 218, 68, 18];
+      //  this.useCategoryIds = options.useCategoryIds || [ 1892, 4483, 88, 218, 68, 18];
        /*
           Default Categories pulled from https://jservice.io/search:
           ---
@@ -11,6 +11,20 @@ class TriviaGameShow {
           88: Geography
           218: Science and Nature
        */
+      // Generate an array of 5 unique random category IDs
+      const maxCategoryID = 24000;
+      const randomCategoryIDs = new Set();
+
+      while (randomCategoryIDs.size < 6) {
+         const randomCategoryID = Math.floor(Math.random() * maxCategoryID) + 1;
+         randomCategoryIDs.add(randomCategoryID);
+      }
+
+      // Convert the set of random IDs to an array
+      const randomCategoryIdsArray = Array.from(randomCategoryIDs);
+
+      // Use the generated random category IDs
+      this.useCategoryIds = randomCategoryIdsArray;
  
        //Database
        this.categories = [];
@@ -60,7 +74,7 @@ class TriviaGameShow {
          // MULTIPLY ALL OF THE CLUES' VALUES BY 2 TO REFLECT DOUBLE JEOPARDY
          //
          this.fetchCategories();
-         // this.fetchRandomCategories();
+         // this.fetchRandomCategories1();
    
          //FINALLY, GET FINAL JEOPARDY
       }
@@ -70,9 +84,10 @@ class TriviaGameShow {
          //Fetch all of the data from the API
          const categories = this.useCategoryIds.map(category_id => {
             return new Promise((resolve, reject) => {
-               fetch(`https://jservice.io/api/category?id=${category_id}`, {
-                  mode: 'no-cors'
-               })
+               // fetch(`https://jservice.io/api/category?id=${category_id}`, {
+               //    mode: 'no-cors'
+               // })
+               fetch(`https://jservice.io/api/category?id=${category_id}`)
                   .then(response => response.json()).then(data => {
                      resolve(data);
                   });
@@ -91,7 +106,7 @@ class TriviaGameShow {
                   clues: []
                }
                
-               clueValues = [200, 400, 600, 800, 1000]
+               const clueValues = [200, 400, 600, 800, 1000]
                //Add every clue within a category to our database of clues
                //GETS FIVE RANDOM CLUES FROM THIS CATEGORY
                var clues = shuffle(result.clues).splice(0,5).forEach((clue, index) => {
@@ -106,8 +121,8 @@ class TriviaGameShow {
                   this.clues[clueId] = {
                      question: clue.question,
                      answer: clue.answer,
-                     // value: clueValues[index],
-                     value: (index + 1) * 100,
+                     value: clueValues[index],
+                     // value: (index + 1) * 100,
                      currentCategory: category.title
                   };
                })
@@ -199,7 +214,7 @@ class TriviaGameShow {
                   title: result.title,
                   clues: []
                };
-               clue_values = [200, 400, 600, 800, 1000]
+               const clue_values = [200, 400, 600, 800, 1000]
                var clues = result.clues.slice(0, 5).forEach((clue, index) => {
                   var clueId = categoryIndex + "-" + index;
                   category.clues.push(clueId);
