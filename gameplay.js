@@ -1,16 +1,15 @@
 class TriviaGameShow {
-    constructor(element, options={}) {
- 
-       //Which categories we should use (or use default is nothing provided)
-      //  this.useCategoryIds = options.useCategoryIds || [ 1892, 4483, 88, 218, 68, 18];
-       /*
-          Default Categories pulled from https://jservice.io/search:
-          ---
-          1892: Video Games
-          4483: Three Letter Animals
-          88: Geography
-          218: Science and Nature
-       */
+   constructor(element, options={}) {
+      //Which categories we should use (or use default is nothing provided)
+      //this.useCategoryIds = options.useCategoryIds || [ 1892, 4483, 88, 218, 68, 18];
+      /*
+         Default Categories pulled from https://jservice.io/search:
+         ---
+         1892: Video Games
+         4483: Three Letter Animals
+         88: Geography
+         218: Science and Nature
+      */
       // Generate an array of 5 unique random category IDs
       const maxCategoryID = 24000;
       const randomCategoryIDs = new Set();
@@ -25,32 +24,38 @@ class TriviaGameShow {
 
       // Use the generated random category IDs
       this.useCategoryIds = randomCategoryIdsArray;
- 
-       //Database
-       this.categories = [];
-       this.clues = {};
- 
-       //State
-       this.currentClue = null;
-       this.score1 = 0;
-       this.score2 = 0;
-       this.score3 = 0;
- 
-       //Elements
-       this.boardElement = element.querySelector(".board");
-       this.scoreCountElement1 = element.querySelector(".score-count-1"); //need to change to allow multiple scores
-       this.scoreCountElement2 = element.querySelector(".score-count-2");
-       this.scoreCountElement3 = element.querySelector(".score-count-3");
-       this.formElement = element.querySelector("form");
-       this.inputElement = element.querySelector("input[name=user-answer]");
-       this.modalElement = element.querySelector(".card-modal"); //the popup for the current question
-       this.clueTextElement = element.querySelector(".clue-text");
-       this.clueCategoryElement = element.querySelector(".clue-category"); // i added this lol let's see if it does anything
-       this.resultElement = element.querySelector(".result");
-       this.resultTextElement = element.querySelector(".result_correct-answer-text");
-       this.successTextElement = element.querySelector(".result_success");
-       this.failTextElement = element.querySelector(".result_fail");
-    }
+
+      // Generate an array of 5 unique random category IDs with a clueCount of at least 5
+      // FIXME - GET CATEGORIES
+      // generateRandomCategoryIds().then(randomIds => {
+      //    this.useCategoryIds = randomIds;
+      // });
+
+      //Database
+      this.categories = [];
+      this.clues = {};
+
+      //State
+      this.currentClue = null;
+      this.score1 = 0;
+      this.score2 = 0;
+      this.score3 = 0;
+
+      //Elements
+      this.boardElement = element.querySelector(".board");
+      this.scoreCountElement1 = element.querySelector(".score-count-1"); //need to change to allow multiple scores
+      this.scoreCountElement2 = element.querySelector(".score-count-2");
+      this.scoreCountElement3 = element.querySelector(".score-count-3");
+      this.formElement = element.querySelector("form");
+      this.inputElement = element.querySelector("input[name=user-answer]");
+      this.modalElement = element.querySelector(".card-modal"); //the popup for the current question
+      this.clueTextElement = element.querySelector(".clue-text");
+      this.clueCategoryElement = element.querySelector(".clue-category"); // i added this lol let's see if it does anything
+      this.resultElement = element.querySelector(".result");
+      this.resultTextElement = element.querySelector(".result_correct-answer-text");
+      this.successTextElement = element.querySelector(".result_success");
+      this.failTextElement = element.querySelector(".result_fail");
+      }
  
       initGame() {
          //Bind event handlers
@@ -79,7 +84,7 @@ class TriviaGameShow {
          //FINALLY, GET FINAL JEOPARDY
       }
  
- 
+      
       fetchCategories() {
          //Fetch all of the data from the API
          const categories = this.useCategoryIds.map(category_id => {
@@ -136,105 +141,6 @@ class TriviaGameShow {
                this.renderCategory(c);
             });
        });
-      }
-
-      fetchRandomCategories0() {
-         // made fully by chatgpt lol
-         // Fetch category data for 5 unique random categories with at least 5 clues
-         const maxCategoryID = 24000;
-         const randomCategories = new Set();
-      
-         while (randomCategories.size < 5) {
-            const randomCategoryID = Math.floor(Math.random() * maxCategoryID) + 1;
-            const categoryPromise = fetch(`https://jservice.io/api/category?id=${randomCategoryID}`)
-               .then(response => response.json())
-               .then(data => {
-                  if (data.clues_count >= 5) {
-                     randomCategories.add(data);
-                  }
-               });
-            // Adding each promise to an array, but not waiting for them to complete
-         }
-      
-         // Wait for all promises to complete using Promise.all
-         Promise.all([...randomCategories]).then(results => {
-            // Build up the list of categories and clues using the fetched random categories
-            results.forEach((result, categoryIndex) => {
-               var category = {
-                  title: result.title,
-                  clues: []
-               };
-      
-               var clues = result.clues.slice(0, 5).forEach((clue, index) => {
-                  var clueId = categoryIndex + "-" + index;
-                  category.clues.push(clueId);
-               
-                  this.clues[clueId] = {
-                     question: clue.question,
-                     answer: clue.answer,
-                     value: (index + 1) * 100,
-                     currentCategory: category.title
-                  };
-               });
-      
-               this.categories.push(category);
-            });
-      
-            // Render each category to the DOM
-            this.categories.forEach((c) => {
-               this.renderCategory(c);
-            });
-         });
-      }
-
-      fetchRandomCategories1() {
-         // chat gpt plus me
-         // Fetch category data for 5 unique random categories with at least 5 clues
-         const maxCategoryID = 24000;
-         const randomCategories = new Set();
-      
-         while (randomCategories.size < 5) {
-            const randomCategoryID = Math.floor(Math.random() * maxCategoryID) + 1;
-            const categoryPromise = fetch(`https://jservice.io/api/category?id=${randomCategoryID}`)
-               .then(response => response.json())
-               .then(data => {
-                  if (data.clues_count >= 5) {
-                     randomCategories.add(data);
-                  }
-               });
-               // resolve?? see original line 75
-            // Adding each promise to an array, but not waiting for them to complete
-         }
-      
-         // Wait for all promises to complete using Promise.all
-         Promise.all([...randomCategories]).then(results => {
-            // Build up the list of categories and clues using the fetched random categories
-            results.forEach((result, categoryIndex) => {
-               var category = {
-                  title: result.title,
-                  clues: []
-               };
-               const clue_values = [200, 400, 600, 800, 1000]
-               var clues = result.clues.slice(0, 5).forEach((clue, index) => {
-                  var clueId = categoryIndex + "-" + index;
-                  category.clues.push(clueId);
-               
-                  this.clues[clueId] = {
-                     question: clue.question,
-                     answer: clue.answer,
-                     value: clue_vales[index],
-                     currentCategory: category.title
-                  };
-               });
-      
-               this.categories.push(category);
-            });
-      
-            // Render each category to the DOM
-            this.categories.forEach((c) => {
-               this.renderCategory(c);
-            });
-         });
       }
       
  
