@@ -60,6 +60,7 @@ class TriviaGameShow {
          // MULTIPLY ALL OF THE CLUES' VALUES BY 2 TO REFLECT DOUBLE JEOPARDY
          //
          this.fetchCategories();
+         // this.fetchRandomCategories();
    
          //FINALLY, GET FINAL JEOPARDY
       }
@@ -69,7 +70,9 @@ class TriviaGameShow {
          //Fetch all of the data from the API
          const categories = this.useCategoryIds.map(category_id => {
             return new Promise((resolve, reject) => {
-               fetch(`https://jservice.io/api/category?id=${category_id}`)
+               fetch(`https://jservice.io/api/category?id=${category_id}`, {
+                  mode: 'no-cors'
+               })
                   .then(response => response.json()).then(data => {
                      resolve(data);
                   });
@@ -87,7 +90,8 @@ class TriviaGameShow {
                   title: result.title,
                   clues: []
                }
-   
+               
+               clueValues = [200, 400, 600, 800, 1000]
                //Add every clue within a category to our database of clues
                //GETS FIVE RANDOM CLUES FROM THIS CATEGORY
                var clues = shuffle(result.clues).splice(0,5).forEach((clue, index) => {
@@ -96,11 +100,13 @@ class TriviaGameShow {
                   //Create unique ID for this clue
                   var clueId = categoryIndex + "-" + index;
                   category.clues.push(clueId);
-   
+                  
+
                   //Add clue to DB
                   this.clues[clueId] = {
                      question: clue.question,
                      answer: clue.answer,
+                     // value: clueValues[index],
                      value: (index + 1) * 100,
                      currentCategory: category.title
                   };
@@ -115,7 +121,107 @@ class TriviaGameShow {
                this.renderCategory(c);
             });
        });
-    }
+      }
+
+      fetchRandomCategories0() {
+         // made fully by chatgpt lol
+         // Fetch category data for 5 unique random categories with at least 5 clues
+         const maxCategoryID = 24000;
+         const randomCategories = new Set();
+      
+         while (randomCategories.size < 5) {
+            const randomCategoryID = Math.floor(Math.random() * maxCategoryID) + 1;
+            const categoryPromise = fetch(`https://jservice.io/api/category?id=${randomCategoryID}`)
+               .then(response => response.json())
+               .then(data => {
+                  if (data.clues_count >= 5) {
+                     randomCategories.add(data);
+                  }
+               });
+            // Adding each promise to an array, but not waiting for them to complete
+         }
+      
+         // Wait for all promises to complete using Promise.all
+         Promise.all([...randomCategories]).then(results => {
+            // Build up the list of categories and clues using the fetched random categories
+            results.forEach((result, categoryIndex) => {
+               var category = {
+                  title: result.title,
+                  clues: []
+               };
+      
+               var clues = result.clues.slice(0, 5).forEach((clue, index) => {
+                  var clueId = categoryIndex + "-" + index;
+                  category.clues.push(clueId);
+               
+                  this.clues[clueId] = {
+                     question: clue.question,
+                     answer: clue.answer,
+                     value: (index + 1) * 100,
+                     currentCategory: category.title
+                  };
+               });
+      
+               this.categories.push(category);
+            });
+      
+            // Render each category to the DOM
+            this.categories.forEach((c) => {
+               this.renderCategory(c);
+            });
+         });
+      }
+
+      fetchRandomCategories1() {
+         // chat gpt plus me
+         // Fetch category data for 5 unique random categories with at least 5 clues
+         const maxCategoryID = 24000;
+         const randomCategories = new Set();
+      
+         while (randomCategories.size < 5) {
+            const randomCategoryID = Math.floor(Math.random() * maxCategoryID) + 1;
+            const categoryPromise = fetch(`https://jservice.io/api/category?id=${randomCategoryID}`)
+               .then(response => response.json())
+               .then(data => {
+                  if (data.clues_count >= 5) {
+                     randomCategories.add(data);
+                  }
+               });
+               // resolve?? see original line 75
+            // Adding each promise to an array, but not waiting for them to complete
+         }
+      
+         // Wait for all promises to complete using Promise.all
+         Promise.all([...randomCategories]).then(results => {
+            // Build up the list of categories and clues using the fetched random categories
+            results.forEach((result, categoryIndex) => {
+               var category = {
+                  title: result.title,
+                  clues: []
+               };
+               clue_values = [200, 400, 600, 800, 1000]
+               var clues = result.clues.slice(0, 5).forEach((clue, index) => {
+                  var clueId = categoryIndex + "-" + index;
+                  category.clues.push(clueId);
+               
+                  this.clues[clueId] = {
+                     question: clue.question,
+                     answer: clue.answer,
+                     value: clue_vales[index],
+                     currentCategory: category.title
+                  };
+               });
+      
+               this.categories.push(category);
+            });
+      
+            // Render each category to the DOM
+            this.categories.forEach((c) => {
+               this.renderCategory(c);
+            });
+         });
+      }
+      
  
       renderCategory(category) {
          let column = document.createElement("div");
