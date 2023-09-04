@@ -10,9 +10,9 @@
     <div class="app">
         <header class="top-header">
             <h1>Jeopardy!</h1>
-            <p class="score1">Score <span class="score-count-1"></span></p>
-            <p class="score2">Score <span class="score-count-2"></span></p>
-            <p class="score3">Score <span class="score-count-3"></span></p>
+            <p class="score1">Yellow <span class="score-count-1"></span></p>
+            <p class="score2">Green <span class="score-count-2"></span></p>
+            <p class="score3">Blue <span class="score-count-3"></span></p>
         </header>
         <div class="board">
             <!-- categories get injected here -->
@@ -21,13 +21,23 @@
             
             <div class="card-modal-inner">
                 <!-- inject player who buzzed in -->
-                <div class="clue-category"></div> <!--THIS HORIZONTALLY ALIGNED???-->
+                <div class="clue-category"></div> <!--current category injected here-->
                 <h2 class="clue-text"><!-- clue gets injected here --></h2>
                 
+                <!--ORIGINAL, WORKING
                 <form autocomplete="off">
                     <input name="user-answer" type="text" />
                     <button type="submit">Answer</button>
                 </form>
+                -->
+
+                <!--my changes-->
+                <form>
+                    <button type="submit" name="user-answer" value="correct">Correct</button>
+                    <button type="submit" name="user-answer" value="incorrect">Incorrect</button>
+                </form>
+                
+                <!--end of my changes-->
                 
                 <div class="result">
                     <p class="result_success">CORRECT</p>

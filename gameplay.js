@@ -43,14 +43,14 @@ class TriviaGameShow {
 
       //Elements
       this.boardElement = element.querySelector(".board");
-      this.scoreCountElement1 = element.querySelector(".score-count-1"); //need to change to allow multiple scores
+      this.scoreCountElement1 = element.querySelector(".score-count-1");
       this.scoreCountElement2 = element.querySelector(".score-count-2");
       this.scoreCountElement3 = element.querySelector(".score-count-3");
       this.formElement = element.querySelector("form");
-      this.inputElement = element.querySelector("input[name=user-answer]");
+      this.inputElement = element.querySelector("button[name=user-answer]");
       this.modalElement = element.querySelector(".card-modal"); //the popup for the current question
       this.clueTextElement = element.querySelector(".clue-text");
-      this.clueCategoryElement = element.querySelector(".clue-category"); // i added this lol let's see if it does anything
+      this.clueCategoryElement = element.querySelector(".clue-category");
       this.resultElement = element.querySelector(".result");
       this.resultTextElement = element.querySelector(".result_correct-answer-text");
       this.successTextElement = element.querySelector(".result_success");
@@ -65,6 +65,7 @@ class TriviaGameShow {
             }
          });
          this.formElement.addEventListener("submit", event => {
+            // this.handleFormSubmitv1(event);  // original function
             this.handleFormSubmit(event);
          });
    
@@ -163,16 +164,19 @@ class TriviaGameShow {
       }
  
       updateScore1(change) {
+         // YELLOW
          this.score1 += change;
          this.scoreCountElement1.textContent = this.score1;
       }
 
       updateScore2(change) {
+         // GREEN
          this.score2 += change;
          this.scoreCountElement2.textContent = this.score2;
       }
 
       updateScore3(change) {
+         // BLUE
          this.score3 += change;
          this.scoreCountElement3.textContent = this.score3;
       }
@@ -186,7 +190,7 @@ class TriviaGameShow {
          event.target.classList.add("used");
    
          //Clear out the input field
-         this.inputElement.value = "";
+         // this.inputElement.value = "";
    
          //Update current clue
          this.currentClue = clue;
@@ -201,11 +205,49 @@ class TriviaGameShow {
    
          //Show the modal
          this.modalElement.classList.add("visible");
-         this.inputElement.focus();
+         // this.inputElement.focus();
       }
  
       //Handle an answer from user
       handleFormSubmit(event) {
+         // var isCorrect;
+         console.log("AHHHHHHHHH");
+         console.log(this.inputElement.value); 
+         console.log("oh u actually made it past");
+         if (this.inputElement.value === "correct") {
+            var isCorrect = true;
+         } else {
+            var isCorrect = false;
+         }
+
+         if (isCorrect) {
+            this.updateScore1(this.currentClue.value);
+         } else {
+            this.updateScore1(-this.currentClue.value);
+         }
+
+         // this is all fine
+
+         // if (this.inputElement.value == "correct") {
+         //    var isCorrect = true;
+         //    console.log("CORRECT");
+         //    this.updateScore1(this.currentClue.value);
+         // } else {
+         //    var isCorrect = false;
+         //    console.log("INCORRECT");
+         //    this.updateScore1(-this.currentClue.value);
+         // }
+
+         // if (responseValidity == "correct") {
+         //    this.updateScore1(this.currentClue.value);
+         // } else {
+         //    this.updateScore1(-this.currentClue.value);
+         // }
+
+         this.revealAnswer(isCorrect);
+      }
+
+      handleFormSubmitv1(event) {
          event.preventDefault();
    
          var isCorrect = this.cleanseAnswer(this.inputElement.value) === this.cleanseAnswer(this.currentClue.answer);
@@ -230,8 +272,8 @@ class TriviaGameShow {
          friendlyAnswer = friendlyAnswer.replace(/^an /, "");
          return friendlyAnswer.trim();
       }
- 
- 
+
+
       revealAnswer(isCorrect) {
    
          //Show the individual success/fail case
@@ -242,6 +284,7 @@ class TriviaGameShow {
          this.modalElement.classList.add("showing-result");
    
          //Disappear after a short bit
+         // FOR SOME REASON IT BREAKS AFTER THIS EVEN THO I DIDNT CHANGE ANYTHING SMH
          setTimeout(() => {
             this.modalElement.classList.remove("visible");
          }, 3000);
