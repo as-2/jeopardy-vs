@@ -1,13 +1,10 @@
-console.log('HELLO WORLD');
 const { SerialPort } = require('serialport');
-console.log("SERIAL PORT");
 const { ReadlineParser } = require('@serialport/parser-readline');
 
 const port = new SerialPort({
     path: '/dev/cu.usbmodem144301',
     baudRate: 9600,
   })
-console.log("PORT");
 const parser = port.pipe(new ReadlineParser({ delimiter: '\r\n' }))
 
 
